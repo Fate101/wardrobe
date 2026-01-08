@@ -27,7 +27,7 @@ hook.Add("Wardrobe_RecieveModel", "wardrobe.ttt", function(ply, wsid, mdl, force
 		wardrobe.ttt.queue[ply] = {wsid, mdl}
 		
 		-- Notify the player
-		ply:ChatPrint("Wardrobe | Your model change has been queued for the next round.")
+		ply:ChatPrint("Wardrobe | " .. wardrobe.language.get("Your model change has been queued for the next round."))
 		print("Wardrobe | Queued model change for " .. ply:Nick())
 		
 		return false
@@ -63,7 +63,7 @@ local function ProcessQueue()
 						-- Client side setModel expects (ply, mdl, wsid)
 						wardrobe.setModel(ply, data[2], data[1])
 					end
-					ply:ChatPrint("Wardrobe | Applied queued model.")
+					ply:ChatPrint("Wardrobe | " .. wardrobe.language.get("Applied queued model."))
 					print("Wardrobe | Applied queued model for " .. ply:Nick())
 				end
 			end)

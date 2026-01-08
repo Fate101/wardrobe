@@ -83,6 +83,8 @@ wardrobe.language.lookup.english = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Idle",
 	["Workshop: Working..."                  ] = "Workshop: Working...",
+	["Your model change has been queued for the next round."] = "Your model change has been queued for the next round.",
+	["Applied queued model."]                 = "Applied queued model.",
 	Yes                                        = "Yes"
 }
 
@@ -134,6 +136,8 @@ wardrobe.language.lookup.russian = {
 	["Workshop ID"                           ] = "ID в мастерской",
 	["Workshop: Idle"                        ] = "Мастерская: Бездействует",
 	["Workshop: Working..."                  ] = "Мастерская: В процессе...",
+	["Your model change has been queued for the next round."] = "Изменение вашей модели поставлено в очередь на следующий этап.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Применена модель очереди.", --Needs actual translation (used translator)
 	Yes                                        = "Да"
 }
 
@@ -185,6 +189,8 @@ wardrobe.language.lookup.french = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: en attente",
 	["Workshop: Working..."                  ] = "Workshop: chargement...",
+	["Your model change has been queued for the next round."] = "Votre changement de modèle a été mis en attente pour le prochain tour.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Modèle Appliqué.", --Needs actual translation (used translator)
 	Yes                                        = "Oui"
 }
 
@@ -236,6 +242,8 @@ wardrobe.language.lookup.dutch = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Vrij",
 	["Workshop: Working..."                  ] = "Workshop: Bezig...",
+	["Your model change has been queued for the next round."] = "Uw modelwijziging is in de wachtrij geplaatst voor de volgende ronde.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Toegepast model.", --Needs actual translation (used translator)	
 	Yes                                        = "Ja"
 }
 
@@ -287,6 +295,8 @@ wardrobe.language.lookup.german = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Idle",
 	["Workshop: Working..."                  ] = "Workshop: Working...",
+	["Your model change has been queued for the next round."] = "Ihre Modelländerung wurde für die nächste Runde vorgemerkt.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Angewandtes Modell.", --Needs actual translation (used translator)	
 	Yes                                        = "Ja"
 }
 
@@ -338,6 +348,8 @@ wardrobe.language.lookup.spanish = {
 	["Workshop ID"                           ] = "ID Workshop",
 	["Workshop: Idle"                        ] = "Workshop: Parado",
 	["Workshop: Working..."                  ] = "Workshop: Procesando...",
+	["Your model change has been queued for the next round."] = "El cambio de modelo ha quedado en suspenso para la próxima ronda.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Modelo aplicado.", --Needs actual translation (used translator)	
 	Yes                                        = "Sí"
 }
 
@@ -389,6 +401,8 @@ wardrobe.language.lookup.norwegian = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Venter",
 	["Workshop: Working..."                  ] = "Workshop: Fungerer...",
+	["Your model change has been queued for the next round."] = "Modellendringen er utsatt til neste runde.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Modellen din er nå aktiv.", --Needs actual translation (used translator)	
 	Yes                                        = "Ja"
 }
 
@@ -440,6 +454,8 @@ wardrobe.language.lookup.finnish = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Toimeton",
 	["Workshop: Working..."                  ] = "Workshop: Tekee töitä...",
+	["Your model change has been queued for the next round."] = "Mallinmuutos otetaan käyttöön seuraavalla kierroksella.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Mallisi on nyt aktiivinen.", --Needs actual translation (used translator)	
 	Yes                                        = "Kyllä"
 }
 
@@ -491,6 +507,8 @@ wardrobe.language.lookup.swedish = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Viloläge",
 	["Workshop: Working..."                  ] = "Workshop: Arbetar...",
+	["Your model change has been queued for the next round."] = "Din modelländring har placerats i kö för nästa omgång.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Din modell är nu aktiv.", --Needs actual translation (used translator)	
 	Yes                                        = "Ja"
 }
 
@@ -542,6 +560,8 @@ wardrobe.language.lookup.ukrainian = {
 	["Workshop ID"                           ] = "Workshop ID",
 	["Workshop: Idle"                        ] = "Workshop: Відпочиває",
 	["Workshop: Working..."                  ] = "Workshop: Працює...",
+	["Your model change has been queued for the next round."] = "Зміна вашої моделі поставлена в чергу на наступний раунд.", --Needs actual translation (used translator)
+	["Applied queued model."]                 = "Прикладна модель.", --Needs actual translation (used translator)	
 	Yes                                        = "Так"
 }
 
