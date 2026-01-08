@@ -519,6 +519,23 @@ function wardrobe.requestModelSimple(wsid, mdl)
 	end)
 end
 
+function wardrobe.isAdmin(ply)
+	if not IsValid(ply) then return false end
+
+	-- ULib / ULX Support
+	if ULib and ULib.ucl and ULib.ucl.query(ply, "wardrobe_admin") then
+		return true
+	end
+
+	-- SAM Support
+	if sam and ply.HasPermission and ply:HasPermission("wardrobe_admin") then
+		return true
+	end
+
+	-- Fallback
+	return ply:IsSuperAdmin()
+end
+
 function wardrobe.receive(ply, wsid, mdl, forced)
 	if not wardrobe.enabled:GetBool() then return end
 	if not IsValid(ply) then return end

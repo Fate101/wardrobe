@@ -1297,9 +1297,10 @@ function wardrobe.gui.buildDefaultSheets()
 				local h = about.html
 					h:Dock(FILL)
 
+	end
 					h:OpenURL("http://hexahedron.pw/wardrobe.html")
 
-	if LocalPlayer():IsSuperAdmin() then
+	if wardrobe.isAdmin(LocalPlayer()) then
 		settings.admin = wardrobe.gui.buildNewSettingsSheet(L"Admin", "icon16/shield.png", "DPanel")
 		local admin = settings.admin
 		wardrobe.gui.buildAdminSheet(admin)
@@ -1332,6 +1333,16 @@ function wardrobe.openMenu()
 		end
 
 		wardrobe.guiLoaded = true
+	end
+
+	-- Security: Check if admin status changed since last open, rebuild if necessary
+	local isAdmin = wardrobe.isAdmin(LocalPlayer())
+	local hasAdminTab = IsValid(wardrobe.gui.frame) and IsValid(wardrobe.gui.frame.sheet) and IsValid(wardrobe.gui.frame.sheet.settings) and IsValid(wardrobe.gui.frame.sheet.settings.admin)
+
+	if isAdmin ~= hasAdminTab then
+		wardrobe.log("Wardrobe | Admin status changed, rebuilding menu...")
+		wardrobe.rebuildMenu()
+		return
 	end
 
 	wardrobe.gui.frame:SetVisible(true)

@@ -8,6 +8,7 @@ sam.command.set_category("Wardrobe")
 
 --Added Permission to SAM to allow only certain groups to use Wardrobe
 sam.permissions.add("wardrobe", "Wardrobe", "admin")
+sam.permissions.add("wardrobe_admin", "Wardrobe Admin", "superadmin")
 
 hook.Add("Wardrobe_AccessAllowed", "extensions.sam", function(ply)
 	if not ply:HasPermission("wardrobe") then

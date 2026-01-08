@@ -8,6 +8,7 @@ local CATEGORY_NAME = "Wardrobe"
 
 if SERVER then
 	ULib.ucl.registerAccess("wardrobe", "user", "Can the user use wardrobe?", CATEGORY_NAME)
+	ULib.ucl.registerAccess("wardrobe_admin", "superadmin", "Can the user manage wardrobe admin settings?", CATEGORY_NAME)
 end
 
 hook.Add("Wardrobe_AccessAllowed", "extensions.ulx", function(ply)

@@ -142,7 +142,7 @@ end
 
 util.AddNetworkString("wardrobe.admin.reset_player")
 net.Receive("wardrobe.admin.reset_player", function(len, ply)
-	if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+	if not IsValid(ply) or not wardrobe.isAdmin(ply) then return end
 	
 	local target = net.ReadEntity()
 	if not IsValid(target) then return end
@@ -333,12 +333,12 @@ function wardrobe.enforceGlobalBlacklist(value, type)
 end
 
 net.Receive("wardrobe.admin.get_blacklist", function(len, ply)
-	if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+	if not IsValid(ply) or not wardrobe.isAdmin(ply) then return end
 	wardrobe.syncGlobalBlacklist(ply)
 end)
 
 net.Receive("wardrobe.admin.blacklist_update", function(len, ply)
-	if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+	if not IsValid(ply) or not wardrobe.isAdmin(ply) then return end
 
 	local action = net.ReadString() -- "add", "remove"
 	local type   = net.ReadString() -- "addon", "model"
