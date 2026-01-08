@@ -10,11 +10,6 @@ local function _loadExtensions(ext)
 	end
 end
 
-local newMenu = CreateClientConVar("wardrobe_useNewMenu", "1", true, true, "Should wardrobe be use the experimental new menu?")
-
-local function _load()
-	print("Loading wardrobe")
-
 	if SERVER then
 		include("wardrobe/sv.lua")
 		include("wardrobe_config.lua")
@@ -32,7 +27,6 @@ local function _load()
 		AddCSLuaFile("wardrobe/workshop.lua")
 
 		AddCSLuaFile("wardrobe/frontend.lua")
-		AddCSLuaFile("wardrobe/wardrobegui.lua")
 		AddCSLuaFile("wardrobe/wardrobegui_v2.lua")
 		AddCSLuaFile("wardrobe/preview.lua")
 
@@ -52,13 +46,7 @@ local function _load()
 		include("wardrobe/workshop.lua")
 
 		include("wardrobe/frontend.lua")
-
-		if newMenu:GetBool() then
-			include("wardrobe/wardrobegui_v2.lua")
-		else
-			include("wardrobe/wardrobegui.lua")
-		end
-
+		include("wardrobe/wardrobegui_v2.lua")
 		include("wardrobe/preview.lua")
 
 		if not (wardrobe and wardrobe.dbg) then
@@ -88,4 +76,3 @@ end
 _load()
 
 concommand.Add("wardrobe_reload", _load)
-cvars.AddChangeCallback("wardrobe_useNewMenu", _load, "wardrobe")

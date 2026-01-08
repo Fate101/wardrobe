@@ -19,7 +19,9 @@ local function IsRoundActive()
 end
 
 -- Hook to block and queue model changes during active rounds
-hook.Add("Wardrobe_RecieveModel", "wardrobe.ttt", function(ply, wsid, mdl)
+hook.Add("Wardrobe_RecieveModel", "wardrobe.ttt", function(ply, wsid, mdl, forced)
+	if forced then return end -- Admin forced / Reset (bypasses queue)
+
 	-- If the round is active, we block the change and queue it
 	if IsRoundActive() then
 		wardrobe.ttt.queue[ply] = {wsid, mdl}
@@ -29,6 +31,14 @@ hook.Add("Wardrobe_RecieveModel", "wardrobe.ttt", function(ply, wsid, mdl)
 		print("Wardrobe | Queued model change for " .. ply:Nick())
 		
 		return false
+	end
+end)
+
+hook.Add("Wardrobe_PostSetModel", "wardrobe.ttt", function(ply, mdl, wsid, forced)
+	-- If an admin forced a model change (or reset), clear any queued changes to avoid overwriting it
+	if forced and wardrobe.ttt.queue[ply] then
+		wardrobe.ttt.queue[ply] = nil
+		print("Wardrobe | Specific forced model change cleared queue for " .. ply:Nick())
 	end
 end)
 

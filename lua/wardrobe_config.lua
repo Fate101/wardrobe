@@ -16,6 +16,7 @@ wardrobe.config.defaultLanguage = "english"
 -- so dont worry about having multiple things enabled
 wardrobe.config.extensions = {
 	"darkrp",
+	"ttt",
 	-- "basewars",
 	-- "ulx",
 	-- "sam",
@@ -24,7 +25,7 @@ wardrobe.config.extensions = {
 	-- "pointshop2",
 	-- "clockwork",
 	-- "hoverboards",
-	-- "ttt",
+
 }
 
 -- commandPrefix: Pattern to match the command prefix, [!|/] (the default) means ! or /
@@ -37,24 +38,9 @@ wardrobe.config.commandPrefix = "[!|/]"
 -- !"wardrobe", /"costume" et cetra
 wardrobe.config.command = "wardrobe"
 
--- blacklistIds: Paths of files which should never be mounted
--- please don't add your personal dislikes here, as users can blacklist addons they don't
--- like themselves, this list is for BAD files (eg causes players to crash) or exploits / backdoors
--- WARNING: Inverse table, form: [mdl] = true,
-wardrobe.config.blacklistFiles = {
-	-- Uncomment these if you find people using stupid small models to trick people.
-	--["models/player_chibiterasu.mdl"] = true,
-	--["models/player/dewobedil/chucky/chucky.mdl"] = true,
-}
-
--- blacklistIds: Workshop IDs of addons which should never be downloaded/mounted
--- please don't add your personal dislikes here, as users can blacklist addons they don't
--- like themselves, this list is for BAD addons (eg causes players to crash)
--- WARNING: Inverse table, form: [wsid] = true,
-wardrobe.config.blacklistIds = {
-	--[13377] = true,
-	[834368988] = true, -- invisible playermodel
-}
+-- blacklistIds: MOVED TO IN-GAME MENU
+-- The blacklist system is now managed globally via the in-game Admin menu (Wardrobe > Options > Admin).
+-- Legacy configuration has been removed.
 
 -- userSpecificModels: Any models or workshop ids which only specifc users should be allowed
 -- to use. It may be better to use the hooks to automate this instead if you can code.

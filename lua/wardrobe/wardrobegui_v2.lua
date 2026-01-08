@@ -583,6 +583,17 @@ function wardrobe.gui.buildSelectionSheet(selector)
 			end
 		end
 
+	local resetBtn = vgui.Create("DButton", selector)
+		resetBtn:Dock(TOP)
+		resetBtn:DockMargin(0, 2, 0, 0)
+		resetBtn:SetHeight(24)
+		resetBtn:SetText(L"Reset to Default Model")
+		
+		function resetBtn:DoClick()
+			wardrobe.requestModel(0, nil) -- 0 wsid and nil model triggers a reset
+			wardrobe.gui.frame:Close()
+		end
+
 	selector.preview = vgui.Create("DButton", selector)
 	local pb = selector.preview
 		pb:Dock(TOP)
@@ -668,6 +679,7 @@ function wardrobe.gui.buildSelectionSheet(selector)
 
 	selector:AddItem(l)
 	selector:AddItem(rb)
+	selector:AddItem(resetBtn)
 	selector:AddItem(pb)
 
 	selector:AddItem(sp1)
@@ -984,6 +996,205 @@ function wardrobe.gui.buildOptionsSheet(options)
 	end
 end
 
+wardrobe.globalBlacklist = {addons = {}}
+
+wardrobe.globalBlacklist = {addons = {}, models = {}}
+
+net.Receive("wardrobe.admin.send_blacklist", function()
+	wardrobe.globalBlacklist = net.ReadTable()
+
+	if IsValid(wardrobe.gui.frame) and IsValid(wardrobe.gui.frame.sheet.settings.admin) then
+		if IsValid(wardrobe.gui.adminBlacklistList) then
+			wardrobe.gui.adminBlacklistList:update()
+		end
+		if IsValid(wardrobe.gui.adminBlacklistModelList) then
+			wardrobe.gui.adminBlacklistModelList:update()
+		end
+	end
+end)
+
+function wardrobe.gui.buildAdminSheet(admin)
+	local p = vgui.Create("DPanel", admin)
+		p:Dock(TOP)
+		p:SetHeight(24)
+		p:DockMargin(0, 0, 0, 4)
+		p:SetPaintBackground(false)
+
+	local typeCombo = vgui.Create("DComboBox", p)
+		typeCombo:Dock(LEFT)
+		typeCombo:SetWidth(80)
+		typeCombo:AddChoice(L"Addon", "addon", true)
+		typeCombo:AddChoice(L"Model", "model")
+		typeCombo:DockMargin(0, 0, 4, 0)
+
+	local txt = vgui.Create("DTextEntry", p)
+		txt:Dock(FILL)
+		txt:SetPlaceholderText(L"Enter Workshop ID or Model Path...")
+
+	local btn = vgui.Create("DButton", p)
+		btn:Dock(RIGHT)
+		btn:SetWidth(60)
+		btn:SetText(L"Add")
+		
+		function btn:DoClick()
+			local _, type = typeCombo:GetSelected()
+			local val = txt:GetValue()
+			
+			if not val or val == "" then return end
+
+			net.Start("wardrobe.admin.blacklist_update")
+				net.WriteString("add")
+				net.WriteString(type or "addon")
+				net.WriteString(tostring(val))
+			net.SendToServer()
+
+			txt:SetText("")
+		end
+
+	local lists = vgui.Create("DPanel", admin)
+		lists:Dock(FILL)
+		lists:SetPaintBackground(false)
+
+	-- Top container for Blacklists
+	local pBlacklists = vgui.Create("DPanel", lists)
+		pBlacklists:Dock(TOP)
+		pBlacklists:SetHeight(180) -- Fixed height for blacklists
+		pBlacklists:SetPaintBackground(false)
+		pBlacklists:DockMargin(0, 0, 0, 4)
+
+	-- Blacklist Addons List
+	local lBlacklist = vgui.Create("DListView", pBlacklists)
+		lBlacklist:Dock(LEFT)
+		lBlacklist:SetWidth(250) -- Give it about half width, or fixed
+		lBlacklist:AddColumn(L"Blocked Addons")
+
+		function lBlacklist:update()
+			self:Clear()
+			if wardrobe.globalBlacklist and wardrobe.globalBlacklist.addons then
+				for k, v in pairs(wardrobe.globalBlacklist.addons) do
+					self:AddLine(k)
+				end
+			end
+		end
+		
+		function lBlacklist:OnRowRightClick(i, r)
+			local wsid = r:GetColumnText(1)
+			local menu = DermaMenu()
+			menu:AddOption(L"Remove Addon", function()
+				net.Start("wardrobe.admin.blacklist_update")
+					net.WriteString("remove")
+					net.WriteString("addon")
+					net.WriteString(wsid)
+				net.SendToServer()
+			end):SetIcon("icon16/delete.png")
+			menu:Open()
+		end
+
+	wardrobe.gui.adminBlacklistList = lBlacklist
+
+	-- Blacklist Models List
+	local lBlacklistModels = vgui.Create("DListView", pBlacklists)
+		lBlacklistModels:Dock(FILL) -- Fill remaining top space
+		lBlacklistModels:AddColumn(L"Blocked Models")
+		lBlacklistModels:DockMargin(4, 0, 0, 0)
+
+		function lBlacklistModels:update()
+			self:Clear()
+			if wardrobe.globalBlacklist and wardrobe.globalBlacklist.models then
+				for k, v in pairs(wardrobe.globalBlacklist.models) do
+					self:AddLine(k)
+				end
+			end
+		end
+		
+		function lBlacklistModels:OnRowRightClick(i, r)
+			local mdl = r:GetColumnText(1)
+			local menu = DermaMenu()
+			menu:AddOption(L"Remove Model", function()
+				net.Start("wardrobe.admin.blacklist_update")
+					net.WriteString("remove")
+					net.WriteString("model")
+					net.WriteString(mdl)
+				net.SendToServer()
+			end):SetIcon("icon16/delete.png")
+			menu:Open()
+		end
+
+	wardrobe.gui.adminBlacklistModelList = lBlacklistModels
+	
+	-- Active Players List (Now takes full width at bottom)
+	local lActive = vgui.Create("DListView", lists)
+		lActive:Dock(FILL)
+		lActive:DockMargin(0, 4, 0, 0)
+		lActive:AddColumn(L"Player"):SetFixedWidth(150)
+		lActive:AddColumn(L"Addon ID"):SetFixedWidth(100)
+		lActive:AddColumn(L"Model") -- Takes remaining space
+
+		function lActive:update()
+			self:Clear()
+			for _, ply in ipairs(player.GetAll()) do
+				if ply.wardrobeWsid then
+					local line = self:AddLine(ply:Nick(), ply.wardrobeWsid, ply.wardrobe)
+					line.ply = ply
+				end
+			end
+		end
+
+		function lActive:OnRowRightClick(i, r)
+			local wsid = r:GetColumnText(2)
+			local mdl = r:GetColumnText(3)
+			local ply = r.ply -- Retrieve stored player object
+
+			local menu = DermaMenu()
+			
+			if IsValid(ply) then
+				menu:AddOption(L"Reset Player", function()
+					net.Start("wardrobe.admin.reset_player")
+						net.WriteEntity(ply)
+					net.SendToServer()
+				end):SetIcon("icon16/arrow_undo.png")
+				menu:AddSpacer()
+			end
+
+			menu:AddOption(L"Ban Addon", function()
+				net.Start("wardrobe.admin.blacklist_update")
+					net.WriteString("add")
+					net.WriteString("addon")
+					net.WriteString(wsid)
+				net.SendToServer()
+			end):SetIcon("icon16/add.png")
+			if mdl then
+				menu:AddOption(L"Ban Model", function()
+					net.Start("wardrobe.admin.blacklist_update")
+						net.WriteString("add")
+						net.WriteString("model")
+						net.WriteString(mdl)
+					net.SendToServer()
+				end):SetIcon("icon16/brick_add.png")
+			end
+			menu:Open()
+		end
+
+
+	-- Request initial data
+	net.Start("wardrobe.admin.get_blacklist")
+	net.SendToServer()
+
+	-- Initial update
+	lActive:update()
+	lBlacklist:update()
+	lBlacklistModels:update()
+	
+	-- Timer to refresh active player list occasionally
+	local timerId = "WardrobeAdminRefresh_" .. tostring(os.time())
+	lActive.Think = function(s)
+		if (CurTime() > (s.nextUpdate or 0)) then
+			s.nextUpdate = CurTime() + 2
+			s:update()
+		end
+	end
+end
+
 function wardrobe.rebuildMenu()
 	wardrobe.guiLoaded = false
 
@@ -1087,6 +1298,12 @@ function wardrobe.gui.buildDefaultSheets()
 					h:Dock(FILL)
 
 					h:OpenURL("http://hexahedron.pw/wardrobe.html")
+
+	if LocalPlayer():IsSuperAdmin() then
+		settings.admin = wardrobe.gui.buildNewSettingsSheet(L"Admin", "icon16/shield.png", "DPanel")
+		local admin = settings.admin
+		wardrobe.gui.buildAdminSheet(admin)
+	end
 end
 
 function wardrobe.openMenu()

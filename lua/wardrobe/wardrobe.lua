@@ -519,7 +519,7 @@ function wardrobe.requestModelSimple(wsid, mdl)
 	end)
 end
 
-function wardrobe.receive(ply, wsid, mdl)
+function wardrobe.receive(ply, wsid, mdl, forced)
 	if not wardrobe.enabled:GetBool() then return end
 	if not IsValid(ply) then return end
 
@@ -528,7 +528,7 @@ function wardrobe.receive(ply, wsid, mdl)
 	if wardrobe.ignoreModels[mdl] then return end
 
 	if wardrobe.friendsonly:GetBool() and not wardrobe.isFriend(ply) then return end
-	if hook.Run("Wardrobe_RecieveModel", ply, wsid, mdl) == false then return end
+	if hook.Run("Wardrobe_RecieveModel", ply, wsid, mdl, forced) == false then return end
 
 	local isSelf = ply == LocalPlayer()
 	if ply.inPvs or isSelf or wardrobe.alwaysLoad:GetBool() then
@@ -595,15 +595,25 @@ net.Receive("wardrobe.requestmodel", function()
 	local id = net.ReadUInt(16)
 	local wsid = tonumber(net.ReadString()) or 0
 	local mdl = net.ReadString()
+	local forced = net.ReadBool()
 
 	local ply = Player(id)
 
-	if IsValid(ply) then
-		wardrobe.receive(ply, wsid, mdl)
-	else
-		wardrobe.nullCache[#wardrobe.nullCache + 1] = {id, wsid, mdl}
-		timer.Create("wardrobe_nullcache", 10, 10, wardrobe.processNullCache)
+	if not IsValid(ply) then
+		wardrobe.log("Wardrobe | Received caching request for NULL Entity " .. id .. " (tries: " .. tries .. ")")
+
+		-- Cache this request and try again in a second
+		-- This happens because the player is valid on the server but not on the client yet
+		wardrobe.nullCache[#wardrobe.nullCache + 1] = {id, wsid, mdl, forced}
+
+		if not timer.Exists("wardrobe_nullcache") then
+			timer.Create("wardrobe_nullcache", 1, 0, wardrobe.processNullCache)
+		end
+		
+		return
 	end
+	
+	wardrobe.receive(ply, wsid, mdl, forced)
 end)
 
 local function _readSingle()

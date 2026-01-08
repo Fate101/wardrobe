@@ -113,14 +113,14 @@ net.Receive("wardrobe.cache", function(len, ply)
 	if pass then wardrobe.done[mdl] = true end
 end)
 
-function wardrobe.setModel(ply, wsid, mdl)
+function wardrobe.setModel(ply, wsid, mdl, forced)
 	ply.wardrobeSkin = nil
 
 	if not mdl or mdl == "" or wsid == 0 then
 		ply.wardrobeWsid = nil
 		ply.wardrobe = nil
 
-		print("Wardrobe | " .. ply:Nick() .. " requested a model reset")
+		print("Wardrobe | " .. ply:Nick() .. " requested a model reset" .. (forced and " (FORCED)" or ""))
 	elseif wsid then
 		ply.wardrobeWsid = wsid
 		ply.wardrobe = mdl
@@ -134,10 +134,23 @@ function wardrobe.setModel(ply, wsid, mdl)
 		net.WriteUInt(ply:UserID(), 16)
 		net.WriteString(tostring(wsid))
 		net.WriteString(mdl or "")
+		net.WriteBool(forced or false)
 	net.Broadcast()
 
-	hook.Run("Wardrobe_PostSetModel", ply, mdl, wsid)
+	hook.Run("Wardrobe_PostSetModel", ply, mdl, wsid, forced)
 end
+
+util.AddNetworkString("wardrobe.admin.reset_player")
+net.Receive("wardrobe.admin.reset_player", function(len, ply)
+	if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+	
+	local target = net.ReadEntity()
+	if not IsValid(target) then return end
+	
+	wardrobe.setModel(target, nil, nil, true)
+	print("Wardrobe | Admin " .. ply:Nick() .. " forced reset " .. target:Nick())
+	ply:ChatPrint("Wardrobe | Reset model for " .. target:Nick())
+end)
 
 net.Receive("wardrobe.requestskin", function(len, ply)
 	if wardrobe.blacklist[ply:SteamID()] then
@@ -205,11 +218,11 @@ net.Receive("wardrobe.requestmodel", function(len, ply)
 
 	if not wsid then return end
 
-	if wardrobe.config.blacklistIds[wsid] then
-		return print("Wardrobe | Blacklisted addon id was requested by player " .. ply:Nick() .. " (" .. wsid .. ")")
+	if wardrobe.globalBlacklist and wardrobe.globalBlacklist.addons[tostring(wsid)] then
+		return print("Wardrobe | Global Blacklisted addon id was requested by player " .. ply:Nick() .. " (" .. wsid .. ")")
 	end
-	if wardrobe.config.blacklistFiles[mdl] then
-		return print("Wardrobe | Blacklisted model was requested by player " .. ply:Nick() .. " (" .. mdl .. ")")
+	if wardrobe.globalBlacklist and wardrobe.globalBlacklist.models[mdl] then
+		return print("Wardrobe | Global Blacklisted model was requested by player " .. ply:Nick() .. " (" .. mdl .. ")")
 	end
 
 	if hook.Run("Wardrobe_RecieveModel", ply, wsid, mdl) == false then return end
@@ -253,5 +266,113 @@ net.Receive("wardrobe.single", function(len, ply)
 		net.WriteString(target.wardrobe)
 	net.Send(ply)
 end)
+
+
+
+---------------------------------------------------------------------------------------------------------------------------
+-- Global Blacklist System
+---------------------------------------------------------------------------------------------------------------------------
+
+wardrobe.globalBlacklist = wardrobe.globalBlacklist or {
+	addons = {
+		["834368988"] = true, -- Inherited from legacy config (invisible playermodel)
+	},
+	models = {},
+}
+
+util.AddNetworkString("wardrobe.admin.blacklist_update")
+util.AddNetworkString("wardrobe.admin.get_blacklist")
+util.AddNetworkString("wardrobe.admin.send_blacklist")
+
+function wardrobe.saveGlobalBlacklist()
+	file.Write("wardrobe_global_blacklist.txt", util.TableToJSON(wardrobe.globalBlacklist))
+end
+
+function wardrobe.loadGlobalBlacklist()
+	local data = file.Read("wardrobe_global_blacklist.txt", "DATA")
+	if data then
+		local t = util.JSONToTable(data)
+		if t then
+			wardrobe.globalBlacklist = t
+		end
+	end
+	wardrobe.globalBlacklist.addons = wardrobe.globalBlacklist.addons or {}
+	wardrobe.globalBlacklist.models = wardrobe.globalBlacklist.models or {}
+	
+	-- Backwards compatibility: Identify legacy config ID if not present (handled by initial table but useful if file exists)
+	if not wardrobe.globalBlacklist.addons["834368988"] and not file.Exists("wardrobe_global_blacklist.txt", "DATA") then
+		wardrobe.globalBlacklist.addons["834368988"] = true
+	end
+end
+wardrobe.loadGlobalBlacklist()
+
+function wardrobe.syncGlobalBlacklist(ply)
+	net.Start("wardrobe.admin.send_blacklist")
+		net.WriteTable(wardrobe.globalBlacklist)
+	net.Send(ply)
+end
+
+function wardrobe.enforceGlobalBlacklist(value, type)
+	if type == "addon" then
+		for _, ply in ipairs(player.GetAll()) do
+			if ply.wardrobeWsid and (tonumber(ply.wardrobeWsid) == tonumber(value)) then
+				print("Wardrobe | Retroactive blacklist enforcement for " .. ply:Nick() .. " (Addon: " .. value .. ")")
+				wardrobe.setModel(ply, nil, nil, true) -- Reset to default (Forced)
+				ply:ChatPrint("[Wardrobe] Your current custom model belongs to an addon that has just been blacklisted.")
+			end
+		end
+	elseif type == "model" then
+		for _, ply in ipairs(player.GetAll()) do
+			if ply.wardrobe and (ply.wardrobe == value) then
+				print("Wardrobe | Retroactive blacklist enforcement for " .. ply:Nick() .. " (Model: " .. value .. ")")
+				wardrobe.setModel(ply, nil, nil, true) -- Reset to default (Forced)
+				ply:ChatPrint("[Wardrobe] Your current custom model has just been blacklisted.")
+			end
+		end
+	end
+end
+
+net.Receive("wardrobe.admin.get_blacklist", function(len, ply)
+	if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+	wardrobe.syncGlobalBlacklist(ply)
+end)
+
+net.Receive("wardrobe.admin.blacklist_update", function(len, ply)
+	if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+
+	local action = net.ReadString() -- "add", "remove"
+	local type   = net.ReadString() -- "addon", "model"
+	local value  = net.ReadString()
+
+	if not value or value == "" then return end
+
+	if type == "addon" then
+		local wsid = tonumber(value)
+		if not wsid then return end
+		
+		if action == "add" then
+			wardrobe.globalBlacklist.addons[tostring(wsid)] = true
+			wardrobe.enforceGlobalBlacklist(wsid, "addon")
+			print("Wardrobe | Admin " .. ply:Nick() .. " blacklisted addon " .. wsid)
+		elseif action == "remove" then
+			wardrobe.globalBlacklist.addons[tostring(wsid)] = nil
+			print("Wardrobe | Admin " .. ply:Nick() .. " unblacklisted addon " .. wsid)
+		end
+	elseif type == "model" then
+		if action == "add" then
+			wardrobe.globalBlacklist.models[value] = true
+			wardrobe.enforceGlobalBlacklist(value, "model")
+			print("Wardrobe | Admin " .. ply:Nick() .. " blacklisted model " .. value)
+		elseif action == "remove" then
+			wardrobe.globalBlacklist.models[value] = nil
+			print("Wardrobe | Admin " .. ply:Nick() .. " unblacklisted model " .. value)
+		end
+	end
+
+	wardrobe.saveGlobalBlacklist()
+	wardrobe.syncGlobalBlacklist(ply)
+end)
+
+---------------------------------------------------------------------------------------------------------------------------
 
 print("Wardrobe | SV loaded, wardrobe.blacklist.add to blacklist griefers.")
