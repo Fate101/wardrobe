@@ -5,7 +5,6 @@ end
 
 -- TTT Extension for Wardrobe
 -- Handles queueing model changes during active rounds and applying them staggered when safe.
--- Also applies custom models to corpses.
 
 wardrobe.ttt = wardrobe.ttt or {}
 wardrobe.ttt.queue = wardrobe.ttt.queue or {}
@@ -47,12 +46,6 @@ local function ProcessQueue()
 		if IsValid(ply) then
 			timer.Simple(delay, function()
 				if IsValid(ply) then
-					-- Apply the model
-					-- Note: We use wardrobe.setModel directly to bypass the receipt hook check (since round might effectively not be active, or we just force it)
-					-- Wait, if we process queue at Round End, IsRoundActive() becomes false?
-					-- GetRoundState() == ROUND_POST or ROUND_PREP.
-					-- So wardrobe.receive/request would work, but calling setModel is more direct.
-					
 					-- data[1] = wsid, data[2] = mdl
 					if SERVER then
 						wardrobe.setModel(ply, data[1], data[2])
@@ -132,11 +125,6 @@ if CLIENT then
 			ghost = ClientsideModel(desiredModel)
 			if IsValid(ghost) then
 				ghost:SetNoDraw(true) -- We draw it manually
-				-- ghost:SetParent(ply) -- Do NOT parent or it will follow the custom model's relative space if we aren't careful? 
-				-- Actually, SetParent is fine for deletion handling, but NOT for positioning if we want truth. 
-				-- Better to not parent to avoid engine overriding pos/ang logic, but we must handle cleanup carefully (EntityRemoved hook handles it).
-				
-				-- ghost:AddEffects(EF_BONEMERGE) -- REMOVED: This causes the ghost to snap to the custom model's bones.
 				ghostModels[ply] = ghost
 			end
 		end

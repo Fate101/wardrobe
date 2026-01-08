@@ -894,6 +894,44 @@ function wardrobe.gui.buildDownloadSheet(download)
 		end
 
 	download:AddItem(b)
+
+	local l = vgui.Create("DLabel", download)
+		l:Dock(TOP)
+		l:DockMargin(4, 5, 0, 0)
+		l:SetText(L"Or paste Workshop URL here:")
+		l:SetDark(true)
+	download:AddItem(l)
+
+	local te = vgui.Create("DTextEntry", download)
+		te:Dock(TOP)
+		te:DockMargin(0, 5, 0, 5)
+	download:AddItem(te)
+
+	local submit = vgui.Create("DButton", download)
+		submit:Dock(TOP)
+		submit:SetText(L"Submit URL")
+		
+		function submit:DoClick()
+			local wsid = te:GetValue()
+				wsid = wsid:gsub("https?://steamcommunity%.com/sharedfiles/filedetails/%?id=", "")
+				wsid = wsid:gsub("&searchtext=.*", "")
+
+				wsid = tonumber(wsid or -1)
+
+			if not wsid or wsid <= 1e4 then
+				wardrobe.gui.notif("Invalid Workshop ID/URL provided.")
+				return
+			end
+
+			wardrobe.getAddon(wsid, function(_, _, _, mdls, meta)
+				if IsValid(wardrobe.gui.frame) then
+					wardrobe.gui.addNewModels(wsid, mdls, meta)
+				end
+			end, not wardrobe.showMetaLess:GetBool())
+
+			te:SetText("")
+		end
+	download:AddItem(submit)
 end
 
 wardrobe.gui.optionConvars = {
